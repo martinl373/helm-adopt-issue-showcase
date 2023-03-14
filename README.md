@@ -59,6 +59,7 @@ helm upgrade --install --namespace test-namespace test-release test-chart/
 
 Looking at the output from Helm in debug mode (Adding the `--debug` flag) one can
 see that helm actually thinks that these files are not different (in cluster vs chart)
+on the first upgrade/install.
 
 ```text
 client.go:396: [debug] checking 5 resources for changes
