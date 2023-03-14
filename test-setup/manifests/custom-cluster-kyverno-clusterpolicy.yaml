@@ -1,0 +1,23 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: test-clusterpolicy
+spec:
+  validationFailureAction: audit
+  background: true
+  rules:
+  - name: test-clusterpolicy
+    match:
+      any:
+      - resources:
+          kinds:
+            - Pod
+    validate:
+      message: SomeMessage
+      deny:
+        conditions:
+          all:
+          - key: "hello"
+            operator: AnyNotIn
+            value:
+            - Item01

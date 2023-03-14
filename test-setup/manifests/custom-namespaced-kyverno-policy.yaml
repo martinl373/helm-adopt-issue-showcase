@@ -1,0 +1,23 @@
+apiVersion: kyverno.io/v1
+kind: Policy
+metadata:
+  name: test-policy
+spec:
+  validationFailureAction: audit
+  background: true
+  rules:
+  - name: test-policy
+    match:
+      any:
+      - resources:
+          kinds:
+            - Pod
+    validate:
+      message: SomeMessage
+      deny:
+        conditions:
+          all:
+          - key: "hello"
+            operator: AnyNotIn
+            value:
+            - Item01
