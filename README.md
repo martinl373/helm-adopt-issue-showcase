@@ -9,6 +9,13 @@ from it as a test. (Other CRDs have been tested, with the same results)
 kubectl create -f test-setup/crds/sample-custom-crds.yaml
 ```
 
+## Create a test namespace
+Create a namespace for all the namespaced test resources and the helm release.
+
+```bash
+kubectl create namespace test-namespace
+```
+
 ## 2. Install the Initial versions of test resources
 
 ```bash
@@ -21,7 +28,7 @@ done
 This should fail with Helm complaining that it does not own the files.
 
 ```bash
-helm upgrade --install test-release test-chart/
+helm upgrade --install --namespace test-namespace test-release test-chart/
 ```
 
 ## 4. Ready all resources for Helm adoption
@@ -29,12 +36,11 @@ This is a official feature of helm since version 3.2ish. The adoption is really 
 simple, just adding a label and some annotations. (See the `helm-adopt.sh` for details)
 
 ```bash
-scripts/helm-adopt.sh image.config.openshift.io cluster test-release
-scripts/helm-adopt.sh clusterpolicy.kyverno.io test-clusterpolicy test-release
-scripts/helm-adopt.sh policy.kyverno.io test-policy test-release
-scripts/helm-adopt.sh clusterrole.rbac.authorization.k8s.io test-clusterrole test-release
-scripts/helm-adopt.sh role.rbac.authorization.k8s.io test-role test-release
-scripts/helm-adopt.sh configmap test-configmap test-release
+scripts/helm-adopt.sh clusterpolicy.kyverno.io test-clusterpolicy test-release test-namespace
+scripts/helm-adopt.sh policy.kyverno.io test-policy test-release test-namespace
+scripts/helm-adopt.sh clusterrole.rbac.authorization.k8s.io test-clusterrole test-release test-namespace
+scripts/helm-adopt.sh role.rbac.authorization.k8s.io test-role test-release test-namespace
+scripts/helm-adopt.sh configmap test-configmap test-release test-namespace
 ```
 
 ## 5. Run Helm again (with resources marked for adoption)
@@ -48,20 +54,32 @@ table below, this is only true for resources defined by a CRD. Native k8s resour
 work fine.
 
 ```bash
-helm upgrade --install test-release test-chart/
+helm upgrade --install --namespace test-namespace test-release test-chart/
 ```
 
 Looking at the output from Helm in debug mode (Adding the `--debug` flag) one can
 see that helm actually thinks that these files are not different (in cluster vs chart)
 
 ```text
-client.go:396: [debug] checking 6 resources for changes
-client.go:684: [debug] Patch ConfigMap "test-configmap" in namespace default
+client.go:396: [debug] checking 5 resources for changes
+client.go:684: [debug] Patch ConfigMap "test-configmap" in namespace test-namespace
 client.go:684: [debug] Patch ClusterRole "test-clusterrole" in namespace
-client.go:684: [debug] Patch Role "test-role" in namespace default
+client.go:684: [debug] Patch Role "test-role" in namespace test-namespace
 client.go:675: [debug] Looks like there are no changes for ClusterPolicy "test-clusterpolicy"
-client.go:675: [debug] Looks like there are no changes for Image "cluster"
 client.go:675: [debug] Looks like there are no changes for Policy "test-policy"
+```
+
+If the `helm upgrade --install` command is repeated multiple times, helm will
+(from the second run and onwards) recognize that the CRD based resources are
+indeed different, but it will still not actually change them.
+
+```text
+client.go:396: [debug] checking 5 resources for changes
+client.go:675: [debug] Looks like there are no changes for ConfigMap "test-configmap"
+client.go:675: [debug] Looks like there are no changes for ClusterRole "test-clusterrole"
+client.go:675: [debug] Looks like there are no changes for Role "test-role"
+client.go:684: [debug] Patch ClusterPolicy "test-clusterpolicy" in namespace
+client.go:684: [debug] Patch Policy "test-policy" in namespace test-namespace
 ```
 
 ## Results

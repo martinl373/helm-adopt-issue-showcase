@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: test-configmap
+  namespace: test-namespace
 data:
   marker-configmap: |
     PhantomData: "v0 of test configmap"

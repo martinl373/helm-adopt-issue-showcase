@@ -14,7 +14,7 @@ fi
 
 echo "Assigning resource ${kube_resource_name} (${kube_resource_kind}) to Helm release ${helm_release_name} (ns: ${helm_release_namespace}) ..."
 
-kubectl patch "${kube_resource_kind}" "${kube_resource_name}" --type=merge -p \
+kubectl patch -n "${helm_release_namespace}" "${kube_resource_kind}" "${kube_resource_name}" --type=merge -p \
 '{
     "metadata": {
         "labels": {
